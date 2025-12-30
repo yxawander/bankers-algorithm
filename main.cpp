@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <limits>
 #include <vector>
 using namespace std;
 
@@ -13,6 +14,39 @@ vector<int> Available;
 vector<int> Request;
 vector<bool> Finished; // 进程是否已结束（资源已回收）
 
+static bool readIntOrFail(int& out) {
+    if (!(cin >> out)) {
+        cout << "错误：输入格式不正确。\n";
+        return false;
+    }
+    return true;
+}
+
+static bool readCharOrFail(char& out) {
+    if (!(cin >> out)) {
+        cout << "错误：输入格式不正确。\n";
+        return false;
+    }
+    return true;
+}
+
+static bool validateNonNegativeVector(const vector<int>& v) {
+    for (int x : v) {
+        if (x < 0) return false;
+    }
+    return true;
+}
+
+static bool validateMaxAllocation() {
+    for (int i = 0; i < P; i++) {
+        for (int j = 0; j < R; j++) {
+            if (Max[i][j] < 0 || Allocation[i][j] < 0) return false;
+            if (Allocation[i][j] > Max[i][j]) return false;
+        }
+    }
+    return true;
+}
+
 // 输入系统状态
 void inputData() {
     Max.resize(P, vector<int>(R));
@@ -24,12 +58,17 @@ void inputData() {
     cout << "请输入最大需求矩阵 Max:\n";
     for (int i = 0; i < P; i++)
         for (int j = 0; j < R; j++)
-            cin >> Max[i][j];
+            if (!readIntOrFail(Max[i][j])) return;
 
     cout << "请输入分配矩阵 Allocation:\n";
     for (int i = 0; i < P; i++)
         for (int j = 0; j < R; j++)
-            cin >> Allocation[i][j];
+            if (!readIntOrFail(Allocation[i][j])) return;
+
+    if (!validateMaxAllocation()) {
+        cout << "错误：输入数据不合法（要求非负且 Allocation <= Max）。\n";
+        return;
+    }
 
     // 自动计算 Need = Max - Allocation
     for (int i = 0; i < P; i++)
@@ -38,7 +77,12 @@ void inputData() {
 
     cout << "请输入可用资源向量 Available:\n";
     for (int j = 0; j < R; j++)
-        cin >> Available[j];
+        if (!readIntOrFail(Available[j])) return;
+
+    if (!validateNonNegativeVector(Available)) {
+        cout << "错误：Available 不能为负数。\n";
+        return;
+    }
 }
 
 // 判断进程是否已满足最大需求（Need 全为 0）
@@ -72,7 +116,7 @@ bool promptRecycleIfAny() {
 
         cout << "\n提示：P" << i + 1 << " 已满足最大需求（Need 全为 0）。是否回收其资源并结束进程？(y/n)：";
         char ch;
-        cin >> ch;
+        if (!readCharOrFail(ch)) return recycledAny;
         if (ch == 'y' || ch == 'Y') {
             recycleProcess(i);
             recycledAny = true;
@@ -126,6 +170,10 @@ void requestTest(int pid, const vector<int>& Req) {
         cout << "错误：进程编号非法。\n";
         return;
     }
+    if ((int)Req.size() != R) {
+        cout << "错误：请求向量长度不正确。\n";
+        return;
+    }
     if (Finished[pid]) {
         cout << "错误：P" << pid + 1 << " 已结束（资源已回收），不能再请求资源。\n";
         return;
@@ -138,6 +186,10 @@ void requestTest(int pid, const vector<int>& Req) {
 
     bool exceedNeed = false, exceedAvail = false;
     for (int i = 0; i < R; i++) {
+        if (Req[i] < 0) {
+            cout << "错误：请求向量不能包含负数。\n";
+            return;
+        }
         if (Req[i] > Need[pid][i]) exceedNeed = true;
         if (Req[i] > Available[i]) exceedAvail = true;
     }
@@ -194,9 +246,14 @@ void printState() {
 // 主函数
 int main() {
     cout << "请输入进程数 P：";
-    cin >> P;
+    if (!readIntOrFail(P)) return 0;
     cout << "请输入资源种类数 R：";
-    cin >> R;
+    if (!readIntOrFail(R)) return 0;
+
+    if (P <= 0 || R <= 0) {
+        cout << "错误：P 和 R 必须为正整数。\n";
+        return 0;
+    }
 
     inputData();
 
@@ -216,7 +273,7 @@ int main() {
     while (true) {
         int n;
         cout << "\n请输入请求资源的进程编号（0退出）：";
-        cin >> n;
+        if (!readIntOrFail(n)) return 0;
         if (n == 0) break;
 
         // 若进程已结束或已满配，则不再输入请求向量
@@ -235,7 +292,9 @@ int main() {
 
         Request.resize(R);
         cout << "请输入请求向量 Request：\n";
-        for (int i = 0; i < R; i++) cin >> Request[i];
+        for (int i = 0; i < R; i++) {
+            if (!readIntOrFail(Request[i])) return 0;
+        }
 
         requestTest(n, Request);
         printState();
@@ -264,6 +323,8 @@ int main() {
 
 
 /*
+5
+3
 7 5 3
 3 2 2
 9 0 2
