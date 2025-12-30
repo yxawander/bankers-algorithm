@@ -14,7 +14,7 @@ vector<int> Available;
 vector<int> Request;
 vector<bool> Finished; // 进程是否已结束（资源已回收）
 
-static bool readIntOrFail(int& out) {
+bool readIntOrFail(int& out) {
     if (!(cin >> out)) {
         cout << "错误：输入格式不正确。\n";
         return false;
@@ -22,7 +22,7 @@ static bool readIntOrFail(int& out) {
     return true;
 }
 
-static bool readCharOrFail(char& out) {
+bool readCharOrFail(char& out) {
     if (!(cin >> out)) {
         cout << "错误：输入格式不正确。\n";
         return false;
@@ -30,14 +30,14 @@ static bool readCharOrFail(char& out) {
     return true;
 }
 
-static bool validateNonNegativeVector(const vector<int>& v) {
-    for (int x : v) {
-        if (x < 0) return false;
+bool validateNonNegativeVector(const vector<int>& v) {
+    for (int i = 0; i < (int)v.size(); i++) {
+        if (v[i] < 0) return false;
     }
     return true;
 }
 
-static bool validateMaxAllocation() {
+bool validateMaxAllocation() {
     for (int i = 0; i < P; i++) {
         for (int j = 0; j < R; j++) {
             if (Max[i][j] < 0 || Allocation[i][j] < 0) return false;
@@ -256,6 +256,11 @@ int main() {
     }
 
     inputData();
+
+    if (!cin.good()) {
+        // inputData 内已打印错误信息
+        return 0;
+    }
 
     vector<int> safeSeq;
     if (checkSafety(safeSeq)) {
