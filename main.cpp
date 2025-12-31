@@ -163,6 +163,18 @@ bool checkSafety(vector<int>& safeSeq) {
     return true;
 }
 
+// 打印当前系统安全性与安全序列
+void printSafetyStatus() {
+    vector<int> safeSeq;
+    if (checkSafety(safeSeq)) {
+        cout << "\n当前状态安全，安全序列为：";
+        for (int p : safeSeq) cout << "P" << p << " ";
+        cout << endl;
+    } else {
+        cout << "\n当前状态不安全！\n";
+    }
+}
+
 // 资源请求处理
 void requestTest(int pid, const vector<int>& Req) {
     pid--; // 下标转换
@@ -262,17 +274,13 @@ int main() {
         return 0;
     }
 
-    vector<int> safeSeq;
-    if (checkSafety(safeSeq)) {
-        cout << "\n初始状态安全，安全序列为：";
-        for (int p : safeSeq) cout << "P" << p << " ";
-        cout << endl;
-    } else
-        cout << "\n初始状态不安全！\n";
+    // 初始状态安全性输出
+    printSafetyStatus();
 
     printState();
     if (promptRecycleIfAny()) {
         printState();
+        printSafetyStatus();
     }
 
     while (true) {
@@ -305,6 +313,7 @@ int main() {
         printState();
         if (promptRecycleIfAny()) {
             printState();
+            printSafetyStatus();
         }
     }
 
